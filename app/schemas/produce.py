@@ -1,0 +1,75 @@
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel
+from enum import Enum
+
+
+class CropType(Enum):
+    TOMATOES = "tomatoes"
+    ONIONS = "onions"
+    PEPPERS = "peppers"
+    YAMS = "yams"
+    MAIZE = "maize"
+    RICE = "rice"
+    # Add more as needed for MVP
+
+
+class QualityGrade(Enum):
+    PREMIUM = "premium"  # Firm, no blemishes, uniform size
+    GOOD = "good"        # Minor blemishes, mostly firm
+    STANDARD = "standard" # Some soft spots but usable
+    POOR = "poor"        # Significant spoilage, urgent sale needed
+
+
+class ListingStatus(Enum):
+    AVAILABLE = "available"
+    MATCHED = "matched"
+    SOLD = "sold"
+    EXPIRED = "expired"
+    CANCELLED = "cancelled"
+
+
+class ProduceListingCreate(BaseModel):
+    crop_type: CropType
+    quantity_kg: float
+    quality_grade: Optional[QualityGrade] = QualityGrade.GOOD
+    harvest_date: datetime
+    expected_price_per_kg: float
+    location: str  # Will be handled as coordinates in the service layer
+    storage_conditions: Optional[str] = None
+    shelf_life_days: Optional[int] = None
+    expires_at: datetime
+    voice_message_id: Optional[str] = None
+    transcription: Optional[str] = None
+
+
+class ProduceListingUpdate(BaseModel):
+    crop_type: Optional[CropType] = None
+    quantity_kg: Optional[float] = None
+    quality_grade: Optional[QualityGrade] = None
+    harvest_date: Optional[datetime] = None
+    expected_price_per_kg: Optional[float] = None
+    location: Optional[str] = None  # Will be handled as coordinates in the service layer
+    storage_conditions: Optional[str] = None
+    shelf_life_days: Optional[int] = None
+    expires_at: Optional[datetime] = None
+    voice_message_id: Optional[str] = None
+    transcription: Optional[str] = None
+    status: Optional[ListingStatus] = None
+
+
+class ProduceListingResponse(BaseModel):
+    id: str
+    farmer_id: str
+    crop_type: CropType
+    quantity_kg: float
+    quality_grade: QualityGrade
+    harvest_date: datetime
+    expected_price_per_kg: float
+    storage_conditions: Optional[str] = None
+    shelf_life_days: Optional[int] = None
+    status: ListingStatus
+    created_at: datetime
+    expires_at: datetime
+    voice_message_id: Optional[str] = None
+    transcription: Optional[str] = None
