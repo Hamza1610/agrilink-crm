@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
 from sqlalchemy import Column, String, Float, DateTime, Integer, ForeignKey, Boolean, Enum, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 from app.db.base_class import Base
