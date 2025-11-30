@@ -62,12 +62,13 @@ async def whatsapp_webhook(request: Request):
     db = next(get_db())
     try:
         user = get_user_by_phone(db, phone_number=from_number)
+        user = get_user_by_phone(db, phone_number=from_number)
         if not user:
             # Create new user
             user_data = {
                 "phone_number": from_number,
                 "whatsapp_id": form_data.get("From", ""),
-                "user_type": "farmer"  # Default to farmer
+                "user_type": "FARMER"  # Default to farmer
             }
             if profile_name:
                 user_data["village"] = profile_name  # Using village field for name temporarily
