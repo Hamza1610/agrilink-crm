@@ -5,72 +5,47 @@ from enum import Enum
 
 
 class LogisticsStatus(Enum):
-	REQUESTED = "requested"
-	CONFIRMED = "confirmed"
-	IN_TRANSIT = "in_transit"
-	DELAYED = "delayed"
-	COMPLETED = "completed"
-	FAILED = "failed"
-	CANCELLED = "cancelled"
+    REQUESTED = "requested"          # Request submitted
+    ASSIGNED = "assigned"            # Driver assigned
+    PICKUP_SCHEDULED = "pickup_scheduled"  # Pickup scheduled
+    PICKED_UP = "picked_up"          # Produce collected
+    IN_TRANSIT = "in_transit"        # On the way
+    DELIVERED = "delivered"          # Successfully delivered
+    CANCELLED = "cancelled"          # Request cancelled
+    FAILED = "failed"                # Delivery failed
 
 
-class TransportType(Enum):
-	TRUCK_SMALL = "truck_small"
-	TRUCK_MEDIUM = "truck_medium"
-	TRUCK_LARGE = "truck_large"
-	VAN = "van"
-	MOTORCYCLE = "motorcycle"
+class LogisticsRequest(BaseModel):
+    transaction_id: str
+    pickup_address: str
+    delivery_address: str
+    pickup_datetime: Optional[datetime] = None
+    special_instructions: Optional[str] = None
+    vehicle_type: Optional[str] = "motorcycle"  # motorcycle, truck, etc.
+    requester_id: Optional[str] = None  # Will be set by the system
 
 
-class LogisticsRequestCreate(BaseModel):
-	pickup_location: str
-	pickup_description: Optional[str] = None
-	dropoff_location: str
-	dropoff_description: Optional[str] = None
-	scheduled_pickup: datetime
-	estimated_delivery: Optional[datetime] = None
-	transport_type: Optional[TransportType] = TransportType.TRUCK_SMALL
-	estimated_cost: Optional[float] = None
-	status: Optional[LogisticsStatus] = LogisticsStatus.REQUESTED
-	contact_person: Optional[str] = None
-	contact_phone: Optional[str] = None
-	vehicle_plate: Optional[str] = None
-	notes: Optional[str] = None
+class LogisticsUpdate(BaseModel):
+    status: Optional[LogisticsStatus] = None
+    current_location: Optional[str] = None
+    driver_notes: Optional[str] = None
+    actual_pickup_time: Optional[datetime] = None
+    actual_delivery_time: Optional[datetime] = None
 
 
-class LogisticsRequestUpdate(BaseModel):
-	pickup_location: Optional[str] = None
-	pickup_description: Optional[str] = None
-	dropoff_location: Optional[str] = None
-	dropoff_description: Optional[str] = None
-	scheduled_pickup: Optional[datetime] = None
-	estimated_delivery: Optional[datetime] = None
-	transport_type: Optional[TransportType] = None
-	estimated_cost: Optional[float] = None
-	status: Optional[LogisticsStatus] = None
-	contact_person: Optional[str] = None
-	contact_phone: Optional[str] = None
-	vehicle_plate: Optional[str] = None
-	notes: Optional[str] = None
-
-
-class LogisticsRequestResponse(BaseModel):
-	id: str
-	transaction_id: str
-	pickup_location: str
-	pickup_description: Optional[str] = None
-	dropoff_location: str
-	dropoff_description: Optional[str] = None
-	scheduled_pickup: datetime
-	estimated_delivery: Optional[datetime] = None
-	transport_type: TransportType
-	estimated_cost: Optional[float] = None
-	actual_pickup: Optional[datetime] = None
-	actual_delivery: Optional[datetime] = None
-	status: LogisticsStatus
-	created_at: datetime
-	contact_person: Optional[str] = None
-	contact_phone: Optional[str] = None
-	vehicle_plate: Optional[str] = None
-	notes: Optional[str] = None
-
+class LogisticsResponse(BaseModel):
+    id: str
+    transaction_id: str
+    requester_id: str
+    pickup_address: str
+    delivery_address: str
+    status: LogisticsStatus
+    vehicle_type: str
+    special_instructions: Optional[str] = None
+    pickup_datetime: Optional[datetime] = None
+    actual_pickup_time: Optional[datetime] = None
+    actual_delivery_time: Optional[datetime] = None
+    driver_notes: Optional[str] = None
+    current_location: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
