@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from app.services.whatsapp_flow import WhatsAppService
+from app.workers.whatsapp_flow import WhatsAppService
 from app.models.user import User
 
 

@@ -2,7 +2,7 @@
 Main WhatsApp Service that integrates with Twilio
 """
 from typing import Optional
-from .whatsapp_flow import WhatsAppService as WhatsAppFlowService
+from ..workers.whatsapp_flow import WhatsAppService as WhatsAppFlowService
 from .voice_service import VoiceService
 
 

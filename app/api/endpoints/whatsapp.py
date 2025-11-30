@@ -6,7 +6,7 @@ import os
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.crud import get_user_by_phone, create_user
-# from app.services.whatsapp_flow import WhatsAppService
+# from app.services.whatsapp_service import WhatsAppService
 from twilio.request_validator import RequestValidator
 from twilio.rest import Client
 import xml.etree.ElementTree as ET
@@ -74,9 +74,9 @@ async def whatsapp_webhook(request: Request):
             user = create_user(db, obj_in=user_data)
         
         # Process the message with WhatsApp service
-        whatsapp_service = WhatsAppService()
-        response_message = whatsapp_service.process_message(user, body, media_url, media_content_type)
-        
+        # whatsapp_service = WhatsAppService()
+        # response_message = whatsapp_service.process_message(user, body, media_url, media_content_type)
+        response_message = "Hello"
         return create_twilio_response(response_message)
     finally:
         db.close()
