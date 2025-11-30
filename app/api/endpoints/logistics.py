@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.db.session import SessionLocal
 from app.schemas.logistics import LogisticsRequest, LogisticsResponse
-from app.crud.crud_logistics import crud_logistics
-from app.crud.crud_transaction import crud_transaction
+from app.crud import crud_logistics
+from app.crud import crud_transaction
 from app.api.deps import get_current_user
 from app.models.user import User
 

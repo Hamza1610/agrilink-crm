@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from app.db.session import SessionLocal
 from app.schemas.produce import ProduceCreate, ProduceResponse, ProduceSearch
-from app.crud.crud_produce import crud_produce
-from app.crud.crud_user import crud_user
+from app.crud import crud_produce
 from app.api.deps import get_current_user
 from app.models.user import User
 

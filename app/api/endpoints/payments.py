@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, status
 from app.db.session import SessionLocal
-from app.crud.crud_transaction import crud_transaction
+from app.crud import crud_transaction
 from app.services.payment_service import PaymentService
 from app.core.config import settings
 import hashlib

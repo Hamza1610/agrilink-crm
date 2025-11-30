@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 from app.db.session import SessionLocal
 from app.core.config import settings
 from app.core.security import verify_token
-from app.crud.crud_user import crud_user
+from app.crud import crud_user
 from app.models.user import User
 
 security = HTTPBearer()
