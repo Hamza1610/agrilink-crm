@@ -5,8 +5,8 @@ import hmac
 import os
 from app.core.config import settings
 from app.db.session import SessionLocal
-from app.crud.crud_user import crud_user
-from app.services.whatsapp_flow import WhatsAppService
+from app.crud import get_user_by_phone, create_user
+# from app.services.whatsapp_flow import WhatsAppService
 from twilio.request_validator import RequestValidator
 from twilio.rest import Client
 import xml.etree.ElementTree as ET
@@ -60,7 +60,7 @@ async def whatsapp_webhook(request: Request):
     # Get or create user
     db = next(get_db())
     try:
-        user = crud_user.get_by_phone(db, phone_number=from_number)
+        user = get_user_by_phone(db, phone_number=from_number)
         if not user:
             # Create new user
             user_data = {
@@ -70,7 +70,7 @@ async def whatsapp_webhook(request: Request):
             }
             if profile_name:
                 user_data["village"] = profile_name  # Using village field for name temporarily
-            user = crud_user.create(db, obj_in=user_data)
+            user = create_user(db, obj_in=user_data)
         
         # Process the message with WhatsApp service
         whatsapp_service = WhatsAppService()

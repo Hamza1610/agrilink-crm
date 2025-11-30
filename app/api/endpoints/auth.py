@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from app.db.session import SessionLocal
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.auth import OTPRequest, OTPVerify, Token
-from app.crud.crud_user import crud_user
+from app.crud import create_user, get_user_by_phone
 from app.core.security import create_access_token, verify_password, get_password_hash
 from app.core.config import settings
 import random
@@ -34,14 +34,14 @@ def request_otp(otp_request: OTPRequest, db=Depends(get_db)):
     # For now, we'll just store it in memory (in production, use Redis or database)
     
     # Check if user exists, create if not
-    user = crud_user.get_by_phone(db, phone_number=otp_request.phone_number)
+    user = get_user_by_phone(db, phone_number=otp_request.phone_number)
     if not user:
         # Create new user
         user_data = {
             "phone_number": otp_request.phone_number,
             "language_preference": otp_request.language_preference or "english"
         }
-        user = crud_user.create(db, obj_in=user_data)
+        user = create_user(db, obj_in=user_data)
     
     # In real implementation, send OTP via Twilio WhatsApp API
     print(f"OTP {otp_code} generated for {otp_request.phone_number}")
@@ -59,7 +59,7 @@ def verify_otp(otp_verify: OTPVerify, db=Depends(get_db)):
     # In a real implementation, verify the OTP from the database/Redis
     # For now, we'll just accept any 6-digit code
     
-    user = crud_user.get_by_phone(db, phone_number=otp_verify.phone_number)
+    user = get_user_by_phone(db, phone_number=otp_verify.phone_number)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
