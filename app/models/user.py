@@ -26,11 +26,11 @@ class User(Base):
 
     id = Column(String, primary_key=True, index=True, default=lambda: f"usr_{uuid4().hex[:8]}")
     phone_number = Column(String, unique=True, index=True, nullable=False)
-    user_type = Column(Enum(UserType), default=UserType.FARMER, nullable=False)
+    user_type = Column(Enum(UserType, name="user_type_enum"), default=UserType.FARMER, nullable=False)
     
     # Authentication & Profile
     whatsapp_id = Column(String, unique=True, nullable=True)  # WhatsApp Business API identifier
-    language_preference = Column(Enum(LanguagePreference), default=LanguagePreference.HAUSA)
+    language_preference = Column(Enum(LanguagePreference, name="language_preference_enum"), default=LanguagePreference.HAUSA)
     is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_active = Column(DateTime, default=datetime.utcnow)
@@ -83,7 +83,7 @@ class BuyerProfile(Base):
     
     # Business Data
     business_name = Column(String, nullable=True)
-    buyer_type = Column(Enum(BuyerType), default=BuyerType.TRADER)
+    buyer_type = Column(Enum(BuyerType, name="buyer_type_enum"), default=BuyerType.TRADER)
     typical_purchase_volume_kg = Column(Integer, nullable=True)
     preferred_crops = Column(ARRAY(String), default=list)
     service_radius_km = Column(Integer, default=50)

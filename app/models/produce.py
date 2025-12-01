@@ -36,9 +36,9 @@ class ProduceListing(Base):
     farmer_id = Column(String, ForeignKey("users.id"), nullable=False)
     
     # Core produce details
-    crop_type = Column(Enum(CropType), nullable=False)
+    crop_type = Column(Enum(CropType, name="crop_type_enum"), nullable=False)
     quantity_kg = Column(Float, nullable=False)
-    quality_grade = Column(Enum(QualityGrade), default=QualityGrade.GOOD)
+    quality_grade = Column(Enum(QualityGrade, name="quality_grade_enum"), default=QualityGrade.GOOD)
     harvest_date = Column(DateTime, nullable=False)
     expected_price_per_kg = Column(Float, nullable=False)
     
@@ -48,7 +48,7 @@ class ProduceListing(Base):
     shelf_life_days = Column(Integer, nullable=True)  # Estimated remaining shelf life
     
     # Status tracking
-    status = Column(Enum(ListingStatus), default=ListingStatus.AVAILABLE)
+    status = Column(Enum(ListingStatus, name="status_enum"), default=ListingStatus.AVAILABLE)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)  # Auto-calculated based on crop type + shelf life
     

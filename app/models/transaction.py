@@ -42,7 +42,7 @@ class Transaction(Base):
     total_amount = Column(Float, nullable=False)  # Calculated: price * quantity
     
     # Status & timing
-    status = Column(Enum(TransactionStatus), default=TransactionStatus.PENDING)
+    status = Column(Enum(TransactionStatus, name="status_enum"), default=TransactionStatus.PENDING)
     matched_at = Column(DateTime, default=datetime.utcnow)
     payment_confirmed_at = Column(DateTime, nullable=True)
     delivered_at = Column(DateTime, nullable=True)
