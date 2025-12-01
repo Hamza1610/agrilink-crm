@@ -9,6 +9,7 @@ class NotificationBase(BaseModel):
     logistics_id: Optional[str] = None
     notification_type: str
     channel: str
+    title: str
     message: str
     voice_message_url: Optional[str] = None
     status: str
@@ -24,6 +25,7 @@ class NotificationUpdate(BaseModel):
     logistics_id: Optional[str] = None
     notification_type: Optional[str] = None
     channel: Optional[str] = None
+    title: Optional[str] = None
     message: Optional[str] = None
     voice_message_url: Optional[str] = None
     status: Optional[str] = None

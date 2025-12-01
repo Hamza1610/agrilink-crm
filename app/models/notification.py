@@ -20,6 +20,7 @@ class NotificationType(PyEnum):
     BUYER_INTEREST = "buyer_interest"
     PRICE_ALERT = "price_alert"
     SYSTEM_ALERT = "system_alert"
+    BROADCAST_UPDATE = "broadcast"
 
 class NotificationStatus(PyEnum):
     PENDING = "pending"
@@ -27,6 +28,11 @@ class NotificationStatus(PyEnum):
     DELIVERED = "delivered"
     READ = "read"
     FAILED = "failed"
+
+class NotificationPriority(PyEnum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 class Notification(Base):
     __tablename__ = "notifications"
@@ -37,13 +43,15 @@ class Notification(Base):
     logistics_id = Column(String, ForeignKey("logistics_requests.id"), nullable=True)
     
     # Notification details
-    notification_type = Column(Enum(NotificationType, name="notification_type_enum"), nullable=False)
+    notification_type = Column(Enum(NotificationType, name="notification_type_enum"), default=NotificationType.BROADCAST_UPDATE)
     channel = Column(Enum(NotificationChannel), default=NotificationChannel.WHATSAPP)
+    title = Column(Text, nullable=False)
     message = Column(Text, nullable=False)
     voice_message_url = Column(String, nullable=True)  # For voice notifications
     
     # Status tracking
     status = Column(Enum(NotificationStatus, name="status_enum"), default=NotificationStatus.PENDING)
+    priority = Column(Enum(NotificationPriority, name="priority_enum"), default=NotificationPriority.MEDIUM)
     sent_at = Column(DateTime, nullable=True)
     delivered_at = Column(DateTime, nullable=True)
     read_at = Column(DateTime, nullable=True)

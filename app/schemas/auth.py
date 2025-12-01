@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 from typing import Optional
-from app.schemas.user import UserResponse
+from app.schemas.user import UserResponse, UserType
 
 
 class OTPRequest(BaseModel):
     phone_number: str
+    user_type: UserType
     language_preference: Optional[str] = "english"
 
 
