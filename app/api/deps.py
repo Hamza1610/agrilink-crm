@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 from app.db.session import SessionLocal
 from app.core.config import settings
 from app.core.security import verify_token
-from app.crud import crud_user
+from app.crud import get_user
 from app.models.user import User
 
 security = HTTPBearer()
@@ -40,7 +40,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     except JWTError:
         raise credentials_exception
     
-    user = crud_user.get(db, id=user_id)
+    user = get_user(db, user_id)
     if user is None:
         raise credentials_exception
     
