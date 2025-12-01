@@ -37,13 +37,13 @@ class Notification(Base):
     logistics_id = Column(String, ForeignKey("logistics_requests.id"), nullable=True)
     
     # Notification details
-    notification_type = Column(Enum(NotificationType), nullable=False)
+    notification_type = Column(Enum(NotificationType, name="notification_type_enum"), nullable=False)
     channel = Column(Enum(NotificationChannel), default=NotificationChannel.WHATSAPP)
     message = Column(Text, nullable=False)
     voice_message_url = Column(String, nullable=True)  # For voice notifications
     
     # Status tracking
-    status = Column(Enum(NotificationStatus), default=NotificationStatus.PENDING)
+    status = Column(Enum(NotificationStatus, name="status_enum"), default=NotificationStatus.PENDING)
     sent_at = Column(DateTime, nullable=True)
     delivered_at = Column(DateTime, nullable=True)
     read_at = Column(DateTime, nullable=True)

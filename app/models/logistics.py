@@ -42,12 +42,12 @@ class LogisticsRequest(Base):
     actual_delivery = Column(DateTime, nullable=True)
     
     # Transport details
-    transport_type = Column(Enum(TransportType), default=TransportType.TRUCK_SMALL)
+    transport_type = Column(Enum(TransportType, name="transport_type_enum"), default=TransportType.TRUCK_SMALL)
     estimated_cost = Column(Float, nullable=True)
     actual_cost = Column(Float, nullable=True)
     
     # Status tracking
-    status = Column(Enum(LogisticsStatus), default=LogisticsStatus.REQUESTED)
+    status = Column(Enum(LogisticsStatus, name="status_enum"), default=LogisticsStatus.REQUESTED)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Contact information
