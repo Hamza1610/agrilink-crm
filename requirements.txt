@@ -41,3 +41,4 @@ asyncio==4.0.0
 aiofiles==25.1.0
 cryptography==46.0.3
 phonenumbers==9.0.19
+langchain-groq==0.1.3
