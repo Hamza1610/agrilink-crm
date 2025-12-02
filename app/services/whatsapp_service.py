@@ -53,19 +53,19 @@ class WhatsAppService:
         from twilio.rest import Client
         from app.core.config import settings
         
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        client = Client(settings.WHATSAPP_ACCOUNT_SID, settings.WHATSAPP_AUTH_TOKEN)
         
         if media_url:
             message = client.messages.create(
                 body=message,
                 media_url=[media_url],
-                from_=f'whatsapp:{settings.TWILIO_PHONE_NUMBER}',
+                from_=f'whatsapp:{settings.WHATSAPP_PHONE_NUMBER}',
                 to=f'whatsapp:{to_number}'
             )
         else:
             message = client.messages.create(
                 body=message,
-                from_=f'whatsapp:{settings.TWILIO_PHONE_NUMBER}',
+                from_=f'whatsapp:{settings.WHATSAPP_PHONE_NUMBER}',
                 to=f'whatsapp:{to_number}'
             )
         
@@ -78,12 +78,12 @@ class WhatsAppService:
         from twilio.rest import Client
         from app.core.config import settings
         
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        client = Client(settings.WHATSAPP_ACCOUNT_SID, settings.WHATSAPP_AUTH_TOKEN)
         
         message = client.messages.create(
             body=message,
             media_url=[media_url],
-            from_=f'whatsapp:{settings.TWILIO_PHONE_NUMBER}',
+            from_=f'whatsapp:{settings.WHATSAPP_PHONE_NUMBER}',
             to=f'whatsapp:{to_number}'
         )
         
@@ -104,7 +104,7 @@ class WhatsAppService:
         from twilio.rest import Client
         from app.core.config import settings
         
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        client = Client(settings.WHATSAPP_ACCOUNT_SID, settings.WHATSAPP_AUTH_TOKEN)
         
         message = client.messages(message_sid).fetch()
         return {
