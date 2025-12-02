@@ -42,7 +42,7 @@ class Transaction(Base):
     total_amount = Column(Float, nullable=False)  # Calculated: price * quantity
     
     # Status & timing
-    status = Column(Enum(TransactionStatus, name="status_enum"), default=TransactionStatus.PENDING)
+    status = Column(Enum(TransactionStatus, name="transaction_status_enum"), default=TransactionStatus.PENDING)
     matched_at = Column(DateTime, default=datetime.utcnow)
     payment_confirmed_at = Column(DateTime, nullable=True)
     delivered_at = Column(DateTime, nullable=True)
@@ -77,13 +77,13 @@ class PaymentRecord(Base):
     transaction_id = Column(String, ForeignKey("transactions.id"), nullable=False)
     
     # Payment details
-    payment_method = Column(Enum(PaymentMethod), default=PaymentMethod.PAYSTACK)
+    payment_method = Column(Enum(PaymentMethod), default=PaymentMethod.PAYSTACK, name="payment_method_enum")
     amount = Column(Float, nullable=False)
     currency = Column(String, default="NGN")
     reference = Column(String, unique=True, nullable=False)  # Paystack reference
     
     # Status tracking
-    status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING)
+    status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING, name="paymetn_status_enum")
     created_at = Column(DateTime, default=datetime.utcnow)
     confirmed_at = Column(DateTime, nullable=True)
     

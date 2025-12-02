@@ -7,27 +7,29 @@ from geoalchemy2 import Geometry
 from app.db.base_class import Base
 from enum import Enum as PyEnum
 
-class CropType(PyEnum):
-    TOMATOES = "tomatoes"
-    ONIONS = "onions"
-    PEPPERS = "peppers"
-    YAMS = "yams"
-    MAIZE = "maize"
-    RICE = "rice"
-    # Add more as needed for MVP
+from app.schemas.produce import CropType, ListingStatus, QualityGrade
 
-class QualityGrade(PyEnum):
-    PREMIUM = "premium"  # Firm, no blemishes, uniform size
-    GOOD = "good"        # Minor blemishes, mostly firm
-    STANDARD = "standard" # Some soft spots but usable
-    POOR = "poor"        # Significant spoilage, urgent sale needed
+# class CropType(PyEnum):
+#     TOMATOES = "tomatoes"
+#     ONIONS = "onions"
+#     PEPPERS = "peppers"
+#     YAMS = "yams"
+#     MAIZE = "maize"
+#     RICE = "rice"
+#     # Add more as needed for MVP
 
-class ListingStatus(PyEnum):
-    AVAILABLE = "available"
-    MATCHED = "matched"
-    SOLD = "sold"
-    EXPIRED = "expired"
-    CANCELLED = "cancelled"
+# class QualityGrade(PyEnum):
+#     premium = "premium"  # Firm, no blemishes, uniform size
+#     good = "good"        # Minor blemishes, mostly firm
+#     standard = "standard" # Some soft spots but usable
+#     poor = "poor"        # Significant spoilage, urgent sale needed
+
+# class ListingStatus(PyEnum):
+#     AVAILABLE = "available"
+#     MATCHED = "matched"
+#     SOLD = "sold"
+#     EXPIRED = "expired"
+#     CANCELLED = "cancelled"
 
 class ProduceListing(Base):
     __tablename__ = "produce_listings"
@@ -36,7 +38,8 @@ class ProduceListing(Base):
     farmer_id = Column(String, ForeignKey("users.id"), nullable=False)
     
     # Core produce details
-    crop_type = Column(Enum(CropType, name="crop_type_enum"), nullable=False)
+    crop_type = Column(Text, nullable=False)
+    # crop_type = Column(Enum(CropType, name="crop_type_enum"), nullable=False)
     quantity_kg = Column(Float, nullable=False)
     quality_grade = Column(Enum(QualityGrade, name="quality_grade_enum"), default=QualityGrade.GOOD)
     harvest_date = Column(DateTime, nullable=False)
@@ -48,7 +51,7 @@ class ProduceListing(Base):
     shelf_life_days = Column(Integer, nullable=True)  # Estimated remaining shelf life
     
     # Status tracking
-    status = Column(Enum(ListingStatus, name="status_enum"), default=ListingStatus.AVAILABLE)
+    status = Column(Enum(ListingStatus, name="produce_listng_status_enum"), default=ListingStatus.AVAILABLE)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)  # Auto-calculated based on crop type + shelf life
     
