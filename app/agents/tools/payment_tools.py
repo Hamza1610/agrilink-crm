@@ -1,7 +1,6 @@
 from langchain.tools import tool
 from typing import Optional
 from app.services.payment_service import PaymentService
-from app.models.user import User
 
 payment_service = PaymentService()
 
@@ -18,8 +17,8 @@ def get_payment_info(query: str, user_id: Optional[str] = None) -> str:
     Returns:
         Payment information as a string
     """
-    user = User(id=user_id) if user_id else None
-    return payment_service.get_payment_info(query, user=user)
+    # Don't create User objects - just pass user_id to service
+    return payment_service.get_payment_info(query, user=None)
 
 @tool
 def process_payment(

@@ -1,7 +1,6 @@
 from langchain.tools import tool
 from typing import Optional
 from app.services.logistics_service import LogisticsService
-from app.models.user import User
 
 logistics_service = LogisticsService()
 
@@ -18,8 +17,8 @@ def get_transport_info(query: str, user_id: Optional[str] = None) -> str:
     Returns:
         Transport information as a string
     """
-    user = User(id=user_id) if user_id else None
-    return logistics_service.get_transport_info(query, user=user)
+    # Don't create User objects - just pass user_id to service
+    return logistics_service.get_transport_info(query, user=None)
 
 @tool
 def schedule_transport(

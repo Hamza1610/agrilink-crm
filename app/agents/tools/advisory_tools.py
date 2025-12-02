@@ -1,7 +1,6 @@
 from langchain.tools import tool
 from typing import Optional
 from app.services.advisory_service import AdvisoryService
-from app.models.user import User
 
 advisory_service = AdvisoryService()
 
@@ -18,6 +17,5 @@ def get_crop_advice(query: str, user_id: Optional[str] = None) -> str:
     Returns:
         Expert farming advice as a string
     """
-    # Create a dummy user object if needed, or fetch from DB
-    user = User(id=user_id) if user_id else None
-    return advisory_service.get_crop_advice(query, user=user)
+    # Don't create User objects - just pass user_id to service
+    return advisory_service.get_crop_advice(query, user=None)
