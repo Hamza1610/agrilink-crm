@@ -7,26 +7,26 @@ from app.db.base_class import Base
 from enum import Enum as PyEnum
 
 class TransactionStatus(PyEnum):
-    PENDING = "pending"          # Matched but not paid
-    PAYMENT_INITIATED = "payment_initiated"  # Payment link sent
-    PAYMENT_CONFIRMED = "payment_confirmed"  # Payment received
-    IN_LOGISTICS = "in_logistics" # Transport arranged
-    DELIVERED = "delivered"       # Successfully delivered
-    COMPLETED = "completed"       # Payment released to farmer
-    DISPUTED = "disputed"         # Problem reported
-    CANCELLED = "cancelled"       # Transaction cancelled
+    PENDING = "PENDING"          # Matched but not paid
+    PAYMENT_INITIATED = "PAYMENT_INITIATED"  # Payment link sent
+    PAYMENT_CONFIRMED = "PAYMENT_CONFIRMED"  # Payment received
+    IN_LOGISTICS = "IN_LOGISTICS" # Transport arranged
+    DELIVERED = "DELIVERED"       # Successfully delivered
+    COMPLETED = "COMPLETED"       # Payment released to farmer
+    DISPUTED = "DISPUTED"         # Problem reported
+    CANCELLED = "CANCELLED"       # Transaction cancelled
 
 class PaymentMethod(PyEnum):
-    PAYSTACK = "paystack"
-    BANK_TRANSFER = "bank_transfer"
-    CASH_ON_DELIVERY = "cash_on_delivery"
-    MOBILE_MONEY = "mobile_money"
+    PAYSTACK = "PAYSTACK"
+    BANK_TRANSFER = "BANK_TRANSFER"
+    CASH_ON_DELIVERY = "CASH_ON_DELIVERY"
+    MOBILE_MONEY = "MOBILE_MONEY"
 
 class PaymentStatus(PyEnum):
-    PENDING = "pending"
-    SUCCESS = "success"
-    FAILED = "failed"
-    REFUNDED = "refunded"
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    REFUNDED = "REFUNDED"
 
 class Transaction(Base):
     __tablename__ = "transactions"
@@ -41,7 +41,7 @@ class Transaction(Base):
     quantity_kg = Column(Float, nullable=False)
     total_amount = Column(Float, nullable=False)  # Calculated: price * quantity
     
-    # Status & timing
+    #  Status & timing
     status = Column(Enum(TransactionStatus, name="transaction_status_enum"), default=TransactionStatus.PENDING)
     matched_at = Column(DateTime, default=datetime.utcnow)
     payment_confirmed_at = Column(DateTime, nullable=True)

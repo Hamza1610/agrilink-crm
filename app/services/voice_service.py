@@ -1,5 +1,5 @@
 """
-Voice Service for processing voice notes using Whisper models
+Voice Service for processing voice notes using Groq Whisper
 """
 import asyncio
 import aiohttp
@@ -7,7 +7,7 @@ import tempfile
 import requests
 from typing import Optional
 from pathlib import Path
-import openai
+from groq import Groq
 from app.core.config import settings
 from app.models.conversation import VoiceMessage
 from app.db.session import SessionLocal
@@ -15,82 +15,62 @@ from app.db.session import SessionLocal
 
 class VoiceService:
     """
-    Service for handling voice messages, including transcription and text-to-speech
+    Service for handling voice messages using Groq Whisper for transcription
     """
     
     def __init__(self):
-        # Initialize OpenAI API for Whisper and TTS
-        if settings.OPENAI_API_KEY:
-            openai.api_key = settings.OPENAI_API_KEY
-        self.whisper_model = "whisper-1"
-        self.tts_model = "tts-1"
-        self.voice = "alloy"  # Default voice for text-to-speech
+        # Initialize Groq client
+        if settings.GROQ_API_KEY:
+            self.client = Groq(api_key=settings.GROQ_API_KEY)
+        else:
+            self.client = None
+        
+        # Use Groq's fastest Whisper model
+        self.whisper_model = "whisper-large-v3-turbo"
     
     async def transcribe_voice_note(self, audio_url: str, language: str = "en") -> Optional[str]:
         """
-        Transcribe a voice note using Whisper API
+        Transcribe a voice note using Groq Whisper API
         """
+        if not self.client:
+            print("Groq API key not configured")
+            return None
+            
         try:
             # Download the audio file
             response = requests.get(audio_url)
             if response.status_code != 200:
+                print(f"Failed to download audio: {response.status_code}")
                 return None
             
             # Save to temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as temp_file:
                 temp_file.write(response.content)
                 temp_file_path = temp_file.name
             
-            # Transcribe using OpenAI Whisper
+            # Transcribe using Groq Whisper
             with open(temp_file_path, "rb") as audio_file:
-                transcript = openai.Audio.transcribe(
-                    model=self.whisper_model,
+                transcription = self.client.audio.transcriptions.create(
                     file=audio_file,
-                    language=language
+                    model=self.whisper_model,
+                    language=language,
+                    response_format="text"
                 )
             
             # Clean up temporary file
             Path(temp_file_path).unlink()
             
-            return transcript.text if transcript.text else None
+            # Groq returns the text directly when response_format="text"
+            return transcription if isinstance(transcription, str) else transcription.text
             
         except Exception as e:
-            print(f"Error transcribing voice note: {e}")
+            print(f"Error transcribing voice note with Groq: {e}")
             # Clean up in case of error
             try:
-                Path(temp_file_path).unlink()
+                if 'temp_file_path' in locals():
+                    Path(temp_file_path).unlink()
             except:
                 pass
-            return None
-    
-    async def text_to_speech(self, text: str, voice: str = None) -> Optional[str]:
-        """
-        Convert text to speech using OpenAI TTS
-        Returns URL to the generated audio file
-        """
-        try:
-            if not settings.OPENAI_API_KEY:
-                return None
-            
-            # Use the provided voice or default
-            voice = voice or self.voice
-            
-            # Generate speech using OpenAI TTS
-            response = openai.Audio.speech.create(
-                model=self.tts_model,
-                voice=voice,
-                input=text
-            )
-            
-            # Save the audio to a temporary file and return its URL
-            # In a real implementation, you would upload to your storage service
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
-                response.stream_to_file(temp_file.name)
-                # Return a placeholder URL - in real implementation, upload to storage
-                return f"temp_audio/{Path(temp_file.name).name}"
-                
-        except Exception as e:
-            print(f"Error generating speech: {e}")
             return None
     
     def save_voice_message_to_db(self, user_id: str, audio_url: str, transcription: str = None) -> VoiceMessage:

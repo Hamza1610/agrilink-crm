@@ -1,8 +1,10 @@
 """
-Payment Service for handling transactions
+Payment Service for handling transactions with Paystack integration
 """
-from typing import Optional
+from typing import Optional, Dict, Any
+import requests
 from app.models.user import User
+from app.core.config import settings
 
 
 class PaymentService:
@@ -12,7 +14,7 @@ class PaymentService:
     
     def __init__(self):
         # Initialize with payment methods and transaction tracking
-        self.payment_methods = ['bank_transfer', 'mobile_money', 'cash_on_delivery']
+        self.payment_methods = ['bank_transfer', 'mobile_money', 'cash_on_delivery', 'paystack']
         self.transaction_status = {
             'pending': 'Payment initiated, awaiting confirmation',
             'confirmed': 'Payment confirmed and processed',
@@ -20,11 +22,103 @@ class PaymentService:
             'refunded': 'Payment refunded to your account'
         }
         
-        # Mock payment gateway configuration
+        # Paystack configuration
+        self.paystack_secret_key = settings.PAYSTACK_SECRET_KEY
+        self.paystack_base_url = "https://api.paystack.co"
+        
+        # Mock payment gateway configuration (kept for chat info)
         self.payment_gateways = {
             'paystack': {'enabled': True, 'fees': 1.5},  # 1.5% fee
             'flutterwave': {'enabled': True, 'fees': 1.4},  # 1.4% fee
         }
+    
+    def initialize_transaction(self, email: str, amount: int, reference: str, callback_url: str, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Initialize a transaction with Paystack
+        
+        Args:
+            email: Customer's email address
+            amount: Amount in kobo (e.g., 10000 for NGN 100.00)
+            reference: Unique transaction reference
+            callback_url: URL to redirect to after payment
+            metadata: Additional data to store with transaction
+            
+        Returns:
+            Dictionary containing authorization_url, access_code, and reference
+        """
+        if not self.paystack_secret_key:
+            # Fallback for development/testing without keys
+            print("WARNING: PAYSTACK_SECRET_KEY not set. Returning mock response.")
+            return {
+                "status": True,
+                "message": "Authorization URL created",
+                "data": {
+                    "authorization_url": f"https://checkout.paystack.com/{reference}",
+                    "access_code": f"ac_{reference}",
+                    "reference": reference
+                }
+            }
+            
+        headers = {
+            "Authorization": f"Bearer {self.paystack_secret_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "email": email,
+            "amount": amount,
+            "reference": reference,
+            "callback_url": callback_url,
+            "metadata": metadata or {}
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.paystack_base_url}/transaction/initialize",
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error initializing Paystack transaction: {e}")
+            if hasattr(e, 'response') and e.response:
+                print(f"Response: {e.response.text}")
+            raise Exception(f"Payment initialization failed: {str(e)}")
+
+    def verify_transaction(self, reference: str) -> Dict[str, Any]:
+        """
+        Verify a transaction with Paystack
+        """
+        if not self.paystack_secret_key:
+            # Fallback for development
+            return {
+                "status": True,
+                "message": "Verification successful",
+                "data": {
+                    "status": "success",
+                    "reference": reference,
+                    "amount": 0,
+                    "gateway_response": "Successful"
+                }
+            }
+            
+        headers = {
+            "Authorization": f"Bearer {self.paystack_secret_key}",
+        }
+        
+        try:
+            response = requests.get(
+                f"{self.paystack_base_url}/transaction/verify/{reference}",
+                headers=headers
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error verifying Paystack transaction: {e}")
+            raise Exception(f"Payment verification failed: {str(e)}")
+
+    # ... (Keep existing chat helper methods: get_payment_info, _get_payment_status, etc.) ...
     
     def get_payment_info(self, query: str, user: Optional[User] = None):
         """
@@ -122,7 +216,7 @@ class PaymentService:
     
     def process_payment(self, user: User, amount: float, service: str, method: str = 'mobile_money'):
         """
-        Process a payment for a specific service
+        Process a payment for a specific service (Chat Helper)
         """
         # Validate payment method
         if method.lower() not in self.payment_methods:
