@@ -26,7 +26,7 @@ class User(Base):
 
     id = Column(String, primary_key=True, index=True, default=lambda: f"usr_{uuid4().hex[:8]}")
     phone_number = Column(String, unique=True, index=True, nullable=False)
-    user_type = Column(Enum(UserType, name="user_type_enum"), default=UserType.FARMER, nullable=False)
+    user_type = Column(Enum(UserType, name="user_type_enum"), default="farmer", nullable=False)
     
     # Authentication & Profile
     whatsapp_id = Column(String, unique=True, nullable=True)  # WhatsApp Business API identifier

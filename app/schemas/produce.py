@@ -15,22 +15,22 @@ class CropType(Enum):
 
 
 class QualityGrade(Enum):
-    PREMIUM = "premium"  # Firm, no blemishes, uniform size
-    GOOD = "good"        # Minor blemishes, mostly firm
-    STANDARD = "standard" # Some soft spots but usable
-    POOR = "poor"        # Significant spoilage, urgent sale needed
+    PREMIUM = "PREMIUM"  # Firm, no blemishes, uniform size
+    GOOD = "GOOD"        # Minor blemishes, mostly firm
+    STANDARD = "STANDARD" # Some soft spots but usable
+    POOR = "POOR"        # Significant spoilage, urgent sale needed
 
 
 class ListingStatus(Enum):
-    AVAILABLE = "available"
-    MATCHED = "matched"
-    SOLD = "sold"
-    EXPIRED = "expired"
-    CANCELLED = "cancelled"
+    AVAILABLE = "AVAILABLE"
+    MATCHED = "MATCHED"
+    SOLD = "SOLD"
+    EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"
 
 
 class ProduceListingCreate(BaseModel):
-    crop_type: CropType
+    crop_type: CropType # I removed the ENUM TYPE to allow different croptype
     quantity_kg: float
     quality_grade: Optional[QualityGrade] = QualityGrade.GOOD
     harvest_date: datetime
