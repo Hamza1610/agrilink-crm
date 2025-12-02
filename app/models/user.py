@@ -39,16 +39,14 @@ class User(Base):
     village = Column(String, nullable=True)
     location = Column(Geometry("POINT", srid=4326), nullable=True)  # GPS coordinates
     
-    # Relationships
+    # Relationships - using string references to avoid circular imports
     farmer_profile = relationship("FarmerProfile", uselist=False, back_populates="user")
     buyer_profile = relationship("BuyerProfile", uselist=False, back_populates="user")
-    produce_listings = relationship("ProduceListing", back_populates="farmer")
+    produce_listings = relationship("ProduceListing", foreign_keys="[ProduceListing.farmer_id]", back_populates="farmer")
     transactions_as_seller = relationship("Transaction", foreign_keys="[Transaction.seller_id]", back_populates="seller")
     transactions_as_buyer = relationship("Transaction", foreign_keys="[Transaction.buyer_id]", back_populates="buyer")
     voice_messages = relationship("VoiceMessage", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
-
-# app/models/user.py (continued)
 
 class FarmerProfile(Base):
     __tablename__ = "farmer_profiles"

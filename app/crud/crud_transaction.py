@@ -24,8 +24,8 @@ def create_transaction(db: Session, transaction: TransactionCreate) -> Transacti
 
 
 def get_transaction(db: Session, transaction_id: str) -> Optional[Transaction]:
-    """Get a transaction by ID."""
-    return db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    """Get a transaction by ID. or produce listing as fallback"""
+    return db.query(Transaction).filter(Transaction.id == transaction_id or Transaction.produce_listing_id == transaction_id).first()
 
 
 def get_transactions(db: Session, skip: int = 0, limit: int = 100, buyer_id: Optional[str] = None, seller_id: Optional[str] = None) -> List[Transaction]:
