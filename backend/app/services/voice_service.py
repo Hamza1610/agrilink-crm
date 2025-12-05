@@ -5,6 +5,7 @@ import asyncio
 import aiohttp
 import tempfile
 import requests
+import os
 from typing import Optional
 from pathlib import Path
 from groq import Groq
@@ -28,25 +29,35 @@ class VoiceService:
         # Use Groq's fastest Whisper model
         self.whisper_model = "whisper-large-v3-turbo"
     
-    async def transcribe_voice_note(self, audio_url: str, language: str = "en") -> Optional[str]:
+    async def transcribe_voice_note(self, audio_path: str, language: str = "en") -> Optional[str]:
         """
         Transcribe a voice note using Groq Whisper API
+        Args:
+            audio_path: URL or local file path to audio
+            language: Language code (default: "en")
         """
         if not self.client:
             print("Groq API key not configured")
             return None
             
         try:
-            # Download the audio file
-            response = requests.get(audio_url)
-            if response.status_code != 200:
-                print(f"Failed to download audio: {response.status_code}")
-                return None
+            # Check if it's a URL or local file path
+            is_url = audio_path.startswith("http://") or audio_path.startswith("https://")
             
-            # Save to temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as temp_file:
-                temp_file.write(response.content)
-                temp_file_path = temp_file.name
+            if is_url:
+                # Download the audio file
+                response = requests.get(audio_path)
+                if response.status_code != 200:
+                    print(f"Failed to download audio: {response.status_code}")
+                    return None
+                
+                # Save to temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as temp_file:
+                    temp_file.write(response.content)
+                    temp_file_path = temp_file.name
+            else:
+                # It's already a local file path
+                temp_file_path = audio_path
             
             # Transcribe using Groq Whisper
             with open(temp_file_path, "rb") as audio_file:
@@ -57,8 +68,9 @@ class VoiceService:
                     response_format="text"
                 )
             
-            # Clean up temporary file
-            Path(temp_file_path).unlink()
+            # Clean up temporary file (only if we downloaded it)
+            if is_url:
+                Path(temp_file_path).unlink()
             
             # Groq returns the text directly when response_format="text"
             return transcription if isinstance(transcription, str) else transcription.text
@@ -67,7 +79,7 @@ class VoiceService:
             print(f"Error transcribing voice note with Groq: {e}")
             # Clean up in case of error
             try:
-                if 'temp_file_path' in locals():
+                if is_url and 'temp_file_path' in locals():
                     Path(temp_file_path).unlink()
             except:
                 pass

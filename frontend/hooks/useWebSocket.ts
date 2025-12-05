@@ -34,26 +34,31 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
     const [sessionId, setSessionId] = useState<string | null>(null);
 
     const connect = useCallback(() => {
-        if (!userId || !token) return;
+        if (!userId || !token) {
+            console.log('[WS Frontend] Missing userId or token, skipping connection');
+            return;
+        }
 
-        // Close existing connection
-
-        if (wsRef.current) {
-            wsRef.current.close();
+        // Don't create multiple connections
+        if (wsRef.current && (wsRef.current.readyState === WebSocket.CONNECTING || wsRef.current.readyState === WebSocket.OPEN)) {
+            console.log('[WS Frontend] Connection already exists, skipping');
+            return;
         }
 
         const wsUrl = `ws://localhost:8000/api/v1/chat/ws/chat/${userId}?token=${token}`;
+        console.log('[WS Frontend] Connecting to:', wsUrl);
+
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-            console.log('WebSocket connected');
+            console.log('[WS Frontend] ✅ Connection opened successfully');
             setIsConnected(true);
         };
 
         ws.onmessage = (event) => {
             try {
                 const data: ChatMessage = JSON.parse(event.data);
-                console.log('Received message:', data);
+                console.log('[WS Frontend] 📩 Received message:', data);
 
                 // Handle session creation
                 if (data.type === 'session_created') {
@@ -63,25 +68,31 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
                 // Add message to list
                 setMessages(prev => [...prev, data]);
             } catch (error) {
-                console.error('Failed to parse message:', error);
+                console.error('[WS Frontend] ❌ Failed to parse message:', error);
             }
         };
 
         ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+            console.error('[WS Frontend] ❌ WebSocket error:', error);
         };
 
-        ws.onclose = () => {
-            console.log('WebSocket disconnected');
+        ws.onclose = (event) => {
+            console.log('[WS Frontend] 🔌 Connection closed:', event.code, event.reason);
             setIsConnected(false);
 
-            // Auto-reconnect after 3 seconds
-            reconnectTimeoutRef.current = setTimeout(() => {
-                console.log('Attempting to reconnect...');
-                connect();
-            }, 3000);
+            // Only auto-reconnect if not a normal closure (code 1000)
+            if (event.code !== 1000) {
+                console.log('[WS Frontend] 🔄 Will attempt to reconnect in 3 seconds...');
+                reconnectTimeoutRef.current = setTimeout(() => {
+                    console.log('[WS Frontend] 🔄 Attempting to reconnect...');
+                    connect();
+                }, 3000);
+            } else {
+                console.log('[WS Frontend] Normal closure, not reconnecting');
+            }
         };
 
+        // Store the new WebSocket
         wsRef.current = ws;
     }, [userId, token]);
 
@@ -89,18 +100,20 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
         connect();
 
         return () => {
+            console.log('[WS Frontend] 🧹 Cleanup: closing connection');
             if (reconnectTimeoutRef.current) {
                 clearTimeout(reconnectTimeoutRef.current);
             }
             if (wsRef.current) {
-                wsRef.current.close();
+                wsRef.current.close(1000, 'Component unmounting');
+                wsRef.current = null;
             }
         };
     }, [connect]);
 
     const sendMessage = useCallback((content: string) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-            console.error('WebSocket not connected');
+            console.error('[WS Frontend] ❌ WebSocket not connected, cannot send message');
             return;
         }
 
@@ -110,6 +123,7 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
             ...(sessionId && { session_id: sessionId })
         };
 
+        console.log('[WS Frontend] 📤 Sending message:', message);
         wsRef.current.send(JSON.stringify(message));
 
         // Optimistically add user message to UI
@@ -142,10 +156,10 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
             }
 
             const data = await response.json();
-            console.log('Voice upload response:', data);
+            console.log('[WS Frontend] 🎤 Voice upload response:', data);
 
         } catch (error) {
-            console.error('Error uploading voice:', error);
+            console.error('[WS Frontend] ❌ Error uploading voice:', error);
             setMessages(prev => [...prev, {
                 type: 'error',
                 error: 'Failed to upload voice note',
