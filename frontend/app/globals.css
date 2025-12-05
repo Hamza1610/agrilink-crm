@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@layer theme {
+  :root {
+    /* Color Palette - Earth tones + Modern UI */
+    --color-primary: 34 80% 40%;
+    /* Deep Green (Plant/Agriculture) */
+    --color-primary-foreground: 0 0% 100%;
+
+    --color-secondary: 28 80% 55%;
+    /* Warm Orange (Connection) */
+    --color-secondary-foreground: 0 0% 100%;
+
+    --color-accent: 45 90% 60%;
+    /* Golden Yellow (Growth) */
+    --color-accent-foreground: 0 0% 10%;
+
+    --color-background: 0 0% 100%;
+    --color-foreground: 0 0% 10%;
+
+    --color-muted: 0 0% 96%;
+    --color-muted-foreground: 0 0% 45%;
+
+    --color-card: 0 0% 100%;
+    --color-card-foreground: 0 0% 10%;
+
+    --color-border: 0 0% 90%;
+    --color-input: 0 0% 90%;
+    --color-ring: 34 80% 40%;
+
+    --color-success: 142 76% 36%;
+    --color-success-foreground: 0 0% 100%;
+
+    --color-warning: 38 92% 50%;
+    --color-warning-foreground: 0 0% 100%;
+
+    --color-error: 0 84% 60%;
+    --color-error-foreground: 0 0% 100%;
+
+    --color-info: 217 91% 60%;
+    --color-info-foreground: 0 0% 100%;
+
+    /* Radius */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --color-background: 0 0% 8%;
+    --color-foreground: 0 0% 95%;
+
+    --color-muted: 0 0% 15%;
+    --color-muted-foreground: 0 0% 60%;
+
+    --color-card: 0 0% 12%;
+    --color-card-foreground: 0 0% 95%;
+
+    --color-border: 0 0% 20%;
+    --color-input: 0 0% 20%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--color-border));
+  }
+
+  body {
+    background-color: hsl(var(--color-background));
+    color: hsl(var(--color-foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
