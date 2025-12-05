@@ -33,6 +33,63 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [sessionId, setSessionId] = useState<string | null>(null);
 
+
+    const loadHistory = useCallback(async () => {
+        if (!token || !userId) {
+            console.log('[WS Frontend] Cannot load history - missing token or userId');
+            return;
+        }
+
+        try {
+            console.log('[WS Frontend] 📖 Loading chat history...');
+            const response = await fetch(
+                'http://localhost:8000/api/v1/chat/active-session',
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[WS Frontend] ✅ Loaded history:', data);
+
+                // Set session ID
+                setSessionId(data.session_id);
+
+                // Convert backend messages to frontend format
+                const formattedMessages: ChatMessage[] = [];
+                if (data.messages && data.messages.length > 0) {
+                    for (const msg of data.messages) {
+                        if (msg.role === 'user') {
+                            formattedMessages.push({
+                                type: 'text_message',
+                                content: msg.content,
+                                session_id: data.session_id,
+                                timestamp: msg.timestamp
+                            });
+                        } else if (msg.role === 'assistant') {
+                            formattedMessages.push({
+                                type: 'ai_message',
+                                content: msg.content,
+                                session_id: data.session_id,
+                                timestamp: msg.timestamp
+                            });
+                        }
+                    }
+                }
+
+                setMessages(formattedMessages);
+                console.log(`[WS Frontend] 📚 Restored ${formattedMessages.length} messages`);
+            } else {
+                console.error('[WS Frontend] Failed to load history:', response.status);
+            }
+        } catch (error) {
+            console.error('[WS Frontend] ❌ Error loading history:', error);
+        }
+    }, [token, userId]);
+
     const connect = useCallback(() => {
         if (!userId || !token) {
             console.log('[WS Frontend] Missing userId or token, skipping connection');
@@ -97,7 +154,7 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
     }, [userId, token]);
 
     useEffect(() => {
-        connect();
+        loadHistory().then(() => connect());
 
         return () => {
             console.log('[WS Frontend] 🧹 Cleanup: closing connection');
