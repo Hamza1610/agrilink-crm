@@ -46,7 +46,8 @@ class ProduceListing(Base):
     expected_price_per_kg = Column(Float, nullable=False)
     
     # Location & Storage
-    location = Column(Geometry("POINT", srid=4326), nullable=False)
+    location = Column(Text, nullable=False)
+    # location = Column(Geometry("POINT", srid=4326), nullable=False)
     storage_conditions = Column(String, nullable=True)  # "mud_silo", "plastic_bins", etc.
     shelf_life_days = Column(Integer, nullable=True)  # Estimated remaining shelf life
     
