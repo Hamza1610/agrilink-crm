@@ -24,6 +24,8 @@ interface UseWebSocketReturn {
     sendMessage: (content: string) => void;
     uploadVoice: (audioBlob: Blob) => Promise<void>;
     clearMessages: () => void;
+    startNewChat: () => void;
+    switchSession: (sessionId: string) => Promise<void>;
 }
 
 export function useWebSocket(userId: string, token: string): UseWebSocketReturn {
@@ -230,12 +232,98 @@ export function useWebSocket(userId: string, token: string): UseWebSocketReturn 
         setSessionId(null);
     }, []);
 
+    const startNewChat = useCallback(() => {
+        console.log('[WS Frontend] 🆕 Starting new chat');
+        setMessages([]);
+        setSessionId(null);
+        // Next message sent will create a new session
+    }, []);
+
+    const switchSession = useCallback(async (newSessionId: string) => {
+        if (!token) {
+            console.error('[WS Frontend] Cannot switch session - no token');
+            return;
+        }
+
+        try {
+            console.log(`[WS Frontend] 🔄 Switching to session ${newSessionId}`);
+            
+            // Fetch SPECIFIC session data (not just active session)
+            // First, get all sessions to find the one we want
+            const sessionsResponse = await fetch(
+                'http://localhost:8000/api/v1/chat/sessions',
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            );
+            
+            if (!sessionsResponse.ok) {
+                console.error('[WS Frontend] Failed to fetch sessions');
+                return;
+            }
+            
+            const allSessions = await sessionsResponse.json();
+            const targetSession = allSessions.find((s: any) => s.session_id === newSessionId);
+            
+            if (!targetSession) {
+                console.error(`[WS Frontend] Session ${newSessionId} not found`);
+                return;
+            }
+            
+            // Now fetch the full session with messages via history endpoint
+            const response = await fetch(
+                `http://localhost:8000/api/v1/chat/sessions/${newSessionId}/history`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Load that specific session's messages
+                const formattedMessages: ChatMessage[] = [];
+                if (data.messages && data.messages.length > 0) {
+                    for (const msg of data.messages) {
+                        if (msg.role === 'user') {
+                            formattedMessages.push({
+                                type: 'text_message',
+                                content: msg.content,
+                                session_id: newSessionId,
+                                timestamp: msg.timestamp
+                            });
+                        } else if (msg.role === 'assistant') {
+                            formattedMessages.push({
+                                type: 'ai_message',
+                                content: msg.content,
+                                session_id: newSessionId,
+                                timestamp: msg.timestamp
+                            });
+                        }
+                    }
+                }
+                
+                setSessionId(newSessionId);
+                setMessages(formattedMessages);
+                console.log(`[WS Frontend] ✅ Switched to session with ${formattedMessages.length} messages`);
+            }
+        } catch (error) {
+            console.error('[WS Frontend] ❌ Error switching session:', error);
+        }
+    }, [token]);
+
     return {
         isConnected,
         messages,
         sessionId,
         sendMessage,
         uploadVoice,
-        clearMessages
+        clearMessages,
+        startNewChat,
+        switchSession
     };
 }

@@ -5,14 +5,19 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
+import { Send, Mic, MicOff, Menu, X, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import ChatSidebar from './ChatSidebar';
 
 export default function ChatInterface({ userId, token }: { userId: string; token: string }) {
-    const { isConnected, messages, sessionId, sendMessage, uploadVoice } = useWebSocket(userId, token);
+    const { isConnected, messages, sessionId, sendMessage, uploadVoice, startNewChat, switchSession } = useWebSocket(userId, token);
     const [inputValue, setInputValue] = useState('');
     const [isRecording, setIsRecording] = useState(false);
     const [recordingDuration, setRecordingDuration] = useState(0);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isDashboardSidebarOpen, setIsDashboardSidebarOpen] = useState(true);
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [isLoadingSessions, setIsLoadingSessions] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const recordingIntervalRef = useRef<NodeJS.Timeout>();
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -21,6 +26,61 @@ export default function ChatInterface({ userId, token }: { userId: string; token
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // Load sessions on mount
+    useEffect(() => {
+        loadSessions();
+    }, []);
+
+    const loadSessions = async () => {
+        setIsLoadingSessions(true);
+        try {
+            const response = await fetch('http://localhost:8000/api/v1/chat/sessions', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setSessions(data);
+            }
+        } catch (error) {
+            console.error('Error loading sessions:', error);
+        } finally {
+            setIsLoadingSessions(false);
+        }
+    };
+
+    const handleDeleteSession = async (sessionIdToDelete: string) => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/v1/chat/sessions/${sessionIdToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                setSessions(sessions.filter(s => s.session_id !== sessionIdToDelete));
+                // If we deleted the current session, start a new one
+                if (sessionIdToDelete === sessionId) {
+                    startNewChat();
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting session:', error);
+        }
+    };
+
+    const handleSelectSession = async (newSessionId: string) => {
+        await switchSession(newSessionId);
+        // Reload sessions to get fresh data
+        await loadSessions();
+    };
+
+    const handleNewChat = () => {
+        startNewChat();
+        loadSessions(); // Refresh the list
+    };
 
     const handleSend = () => {
         if (!inputValue.trim()) return;
@@ -89,17 +149,38 @@ export default function ChatInterface({ userId, token }: { userId: string; token
     };
 
     return (
-        <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div 
+            className="flex h-full overflow-hidden transition-all duration-300"
+            style={{
+                marginLeft: isDashboardSidebarOpen ? '0' : '-16rem'
+            }}
+        >
+            {/* Sidebar */}
+            <ChatSidebar
+                sessions={sessions}
+                currentSessionId={sessionId}
+                onNewChat={handleNewChat}
+                onSelectSession={handleSelectSession}
+                onDeleteSession={handleDeleteSession}
+                isOpen={isSidebarOpen}
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                isLoading={isLoadingSessions}
+            />
+
+            {/* Main Chat Area */}
+            <div className="flex flex-col flex-1 min-w-0 h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
             {/* Header */}
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 px-6 py-4">
+            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 px-3 md:px-6 py-2 md:py-4">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                            AI Assistant
-                        </h1>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            Ask me about farming, logistics, or payments
-                        </p>
+                    <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+                        <div className="min-w-0">
+                            <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent truncate">
+                                AI Assistant
+                            </h1>
+                            <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 hidden sm:block truncate">
+                                Ask me about farming, logistics, or payments
+                            </p>
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
@@ -180,7 +261,7 @@ export default function ChatInterface({ userId, token }: { userId: string; token
             </div>
 
             {/* Input Area */}
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 px-6 py-4">
+            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 px-3 md:px-6 py-3 md:py-4">
                 {isRecording && (
                     <div className="mb-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-2 flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -201,7 +282,7 @@ export default function ChatInterface({ userId, token }: { userId: string; token
                 <div className="flex items-center gap-3">
                     <button
                         onClick={isRecording ? stopRecording : startRecording}
-                        className={`p-3 rounded-full transition-all ${isRecording
+                        className={`p-2 md:p-3 rounded-full transition-all ${isRecording
                                 ? 'bg-red-500 hover:bg-red-600 text-white'
                                 : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300'
                             }`}
@@ -217,15 +298,15 @@ export default function ChatInterface({ userId, token }: { userId: string; token
                         onKeyPress={handleKeyPress}
                         placeholder={isConnected ? "Type your message..." : "Connecting..."}
                         disabled={!isConnected || isRecording}
-                        className="flex-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400"
+                        className="flex-1 min-w-0 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-full px-3 md:px-5 py-2 md:py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400"
                     />
 
                     <button
                         onClick={handleSend}
                         disabled={!isConnected || !inputValue.trim() || isRecording}
-                        className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-slate-300 disabled:to-slate-400 text-white rounded-full transition-all shadow-md disabled:shadow-none"
+                        className="p-2 md:p-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-slate-300 disabled:to-slate-400 text-white rounded-full transition-all shadow-md disabled:shadow-none"
                     >
-                        <Send className="w-5 h-5" />
+                        <Send className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                 </div>
 
@@ -234,6 +315,7 @@ export default function ChatInterface({ userId, token }: { userId: string; token
                         Session: {sessionId}
                     </p>
                 )}
+            </div>
             </div>
         </div>
     );
