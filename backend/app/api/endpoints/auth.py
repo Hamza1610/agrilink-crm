@@ -10,10 +10,11 @@ from app.core.security import create_access_token, verify_password, get_password
 from app.core.config import settings
 import random
 import string
+import logging
 
 router = APIRouter()
-
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 def get_db():
     db = SessionLocal()
@@ -25,46 +26,10 @@ def get_db():
 @router.post("/otp-request", response_model=dict)
 def request_otp(otp_request: OTPRequest, db=Depends(get_db)):
     """
-    Request OTP verification code via WhatsApp/SMS
+    Request OTP verification code via WhatsApp
     """
     # Generate a random 6-digit OTP
     otp_code = ''.join(random.choices(string.digits, k=6))
-    
-    # In a real implementation, this would send the OTP via WhatsApp/SMS
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
-from datetime import datetime, timedelta
-from app.db.session import SessionLocal
-from app.schemas.user import UserCreate, UserResponse
-from app.schemas.auth import OTPRequest, OTPVerify, Token
-from app.crud import create_user, get_user_by_phone
-from app.core.security import create_access_token, verify_password, get_password_hash
-from app.core.config import settings
-import random
-import string
-
-router = APIRouter()
-
-security = HTTPBearer()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@router.post("/otp-request", response_model=dict)
-def request_otp(otp_request: OTPRequest, db=Depends(get_db)):
-    """
-    Request OTP verification code via WhatsApp/SMS
-    """
-    # Generate a random 6-digit OTP
-    otp_code = ''.join(random.choices(string.digits, k=6))
-    
-    # In a real implementation, this would send the OTP via WhatsApp/SMS
-    # For now, we'll just store it in memory (in production, use Redis or database)
     
     # Check if user exists, create if not
     user = get_user_by_phone(db, phone_number=otp_request.phone_number)
@@ -77,64 +42,33 @@ def request_otp(otp_request: OTPRequest, db=Depends(get_db)):
         }
         user = create_user(db, user=user_data)
     
-    # In real implementation, send OTP via Twilio WhatsApp API
-    print(f"OTP {otp_code} generated for {otp_request.phone_number}")
-    
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"OTP generated for {otp_request.phone_number}")
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
-from datetime import datetime, timedelta
-from app.db.session import SessionLocal
-from app.schemas.user import UserCreate, UserResponse
-from app.schemas.auth import OTPRequest, OTPVerify, Token
-from app.crud import create_user, get_user_by_phone
-from app.core.security import create_access_token, verify_password, get_password_hash
-from app.core.config import settings
-import random
-import string
-
-router = APIRouter()
-
-security = HTTPBearer()
-
-def get_db():
-    db = SessionLocal()
+    # Send OTP via Twilio WhatsApp API
     try:
-        yield db
-    finally:
-        db.close()
+        from app.services.whatsapp_service import WhatsAppService
+        whatsapp_service = WhatsAppService()
+        
+        # Format OTP message
+        otp_message = f"""🔐 *ShukaLink CRM - Login Code*
 
-@router.post("/otp-request", response_model=dict)
-def request_otp(otp_request: OTPRequest, db=Depends(get_db)):
-    """
-    Request OTP verification code via WhatsApp/SMS
-    """
-    # Generate a random 6-digit OTP
-    otp_code = ''.join(random.choices(string.digits, k=6))
-    
-    # In a real implementation, this would send the OTP via WhatsApp/SMS
-    # For now, we'll just store it in memory (in production, use Redis or database)
-    
-    # Check if user exists, create if not
-    user = get_user_by_phone(db, phone_number=otp_request.phone_number)
-    if not user:
-        # Create new user
-        user_data = {
-            "phone_number": otp_request.phone_number,
-            "user_type": otp_request.user_type,
-            "language_preference": otp_request.language_preference or "english"
-        }
-        user = create_user(db, user=user_data)
-    
-    # In real implementation, send OTP via Twilio WhatsApp API
-    print(f"OTP {otp_code} generated for {otp_request.phone_number}")
-    
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"OTP generated for {otp_request.phone_number}")
+Your verification code is: *{otp_code}*
+
+This code will expire in 5 minutes.
+Do not share this code with anyone.
+
+If you didn't request this code, please ignore this message."""
+        
+        # Send via WhatsApp
+        whatsapp_service.send_message(
+            to_number=otp_request.phone_number,
+            message=otp_message
+        )
+        
+        logger.info(f"✅ OTP sent via WhatsApp to {otp_request.phone_number}")
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to send WhatsApp OTP: {str(e)}")
+        # Fallback: print for development
+        print(f"⚠️ WhatsApp send failed. OTP for {otp_request.phone_number}: {otp_code}")
     
     return {
         "message": f"OTP sent to {otp_request.phone_number}",
@@ -146,8 +80,6 @@ def verify_otp(otp_verify: OTPVerify, db=Depends(get_db)):
     """
     Verify OTP code and receive JWT token
     """
-    import logging
-    logger = logging.getLogger(__name__)
     logger.info(f"Verifying OTP for {otp_verify.phone_number}")
 
     try:
@@ -169,7 +101,7 @@ def verify_otp(otp_verify: OTPVerify, db=Depends(get_db)):
             expires_delta=access_token_expires
         )
         
-        logger.info(f"OTP verified successfully for user {user.id}")
+        logger.info(f"✅ OTP verified successfully for user {user.id}")
         
         return Token(
             access_token=access_token,
