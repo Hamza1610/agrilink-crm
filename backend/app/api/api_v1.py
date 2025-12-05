@@ -1,10 +1,11 @@
 from fastapi import APIRouter
-from app.api.endpoints import auth, whatsapp, produce, payments, logistics, admin
+from app.api.endpoints import auth, whatsapp, produce, payments, logistics, admin, chat
 
 api_router = APIRouter()
 
 # Include API endpoints
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
 api_router.include_router(whatsapp.router, prefix="/whatsapp", tags=["whatsapp"])
 api_router.include_router(produce.router, prefix="/produce", tags=["produce"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
