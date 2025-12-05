@@ -15,22 +15,18 @@ class WhatsAppService:
         self.ai_agent = AIAgent()
         self.voice_service = VoiceService()
     
-    def process_message(self, user, message: str, media_url: str = None, media_content_type: str = None):
+    async def process_message(self, user, message: str, media_url: str = None, media_content_type: str = None):
         """
-        Process incoming WhatsApp message (text or voice) and return response
+        Process incoming WhatsApp message (text or voice) and return response (async)
         """
+
+        print("Processing message:", message, media_url, media_content_type)
         # Handle voice notes
         if media_url and media_content_type:
             if 'audio' in media_content_type.lower() or 'voice' in media_content_type.lower():
                 try:
                     # Transcribe using Groq
-                    import asyncio
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    transcribed_text = loop.run_until_complete(
-                        self.voice_service.transcribe_voice_note(media_url)
-                    )
-                    loop.close()
+                    transcribed_text = await self.voice_service.transcribe_voice_note(media_url)
                     
                     if transcribed_text:
                         message = transcribed_text
@@ -46,7 +42,7 @@ class WhatsAppService:
         
         # Use AI agent for all other messages
         try:
-            response = self.ai_agent.process_query(message, user=user)
+            response = await self.ai_agent.process_query(message, user=user)
             return response if response else "I'm here to help! What would you like to know about farming, logistics, or payments?"
         except Exception as e:
             print(f"Error processing message with AI: {e}")

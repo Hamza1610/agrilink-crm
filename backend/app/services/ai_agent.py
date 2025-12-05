@@ -18,14 +18,15 @@ class AIAgent:
             print(f"Error initializing agent graph: {e}")
             self.graph = None
     
-    def process_query(self, query: str, user: Optional[User] = None):
+    async def process_query(self, query: str, user: Optional[User] = None):
         """
-        Process a user query and return an appropriate response
+        Process a user query and return an appropriate response (async with timeout)
         """
         if not self.graph:
             return "System is currently initializing or missing configuration (GROQ_API_KEY). Please try again later."
 
         from langchain_core.messages import HumanMessage
+        import asyncio
         
         # Prepare initial state
         initial_state = {
@@ -39,12 +40,36 @@ class AIAgent:
             }
         }
         
+
+        print("TRACING DATAFLOW: INITIAL STATE", initial_state)
         try:
-            # Invoke the graph with increased recursion limit
-            result = self.graph.invoke(
-                initial_state,
-                config={"recursion_limit": 50}
-            )
+            # Run the synchronous invoke in a thread pool with timeout protection
+            loop = asyncio.get_event_loop()
+            
+            # Wrap invoke in a lambda for executor
+            def invoke_graph():
+                print("DEBUG: Starting graph.invoke()")
+                try:
+                    result = self.graph.invoke(
+                        initial_state,
+                        config={"recursion_limit": 50}
+                    )
+                    print("DEBUG: graph.invoke() completed successfully")
+                    return result
+                except Exception as e:
+                    print(f"DEBUG: graph.invoke() raised exception: {e}")
+                    raise
+            
+            # Execute with 30 second timeout
+            try:
+                result = await asyncio.wait_for(
+                    loop.run_in_executor(None, invoke_graph),
+                    timeout=30.0
+                )
+            except asyncio.TimeoutError:
+                error_msg = "The AI agent is taking too long to process your request (timeout after 30s). This might be due to a complex query or system issue. Please try a simpler question or try again later."
+                print(f"ERROR: {error_msg}")
+                return error_msg
             
             # Extract the last message content
             messages = result.get("messages", [])
