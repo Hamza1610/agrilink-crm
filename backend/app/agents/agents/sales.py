@@ -33,7 +33,10 @@ You: Call get_payment_info with their query
 User: "How do I pay?"
 You: "Payments on ShukaLink are secure and easy! When you're ready to pay for a transaction, I'll generate a payment link sent directly to your WhatsApp. You can pay with your card or bank transfer. Do you have a specific payment you'd like to make?"
 
-**CRITICAL**: Never call process_payment without a specific numeric amount. The amount must be a number type."""),
+**CRITICAL**: 
+- Never call process_payment without a specific numeric amount. The amount must be a number type.
+- DO NOT use XML tags like <function=...> in your response. Just use the provided tools directly.
+- If you need to call a tool, do not output text before the tool call."""),
         MessagesPlaceholder(variable_name="messages"),
     ])
     

@@ -38,6 +38,7 @@ Once I have these details, I can schedule a pickup for you."
 **When NOT to call tools:**
 - "Hello" → Respond with greeting
 - "What can you do?" → Explain your capabilities
+- DO NOT use XML tags like <function=...> in your response. Just use the provided tools directly.
 
 Be efficient and friendly!"""),
         MessagesPlaceholder(variable_name="messages"),

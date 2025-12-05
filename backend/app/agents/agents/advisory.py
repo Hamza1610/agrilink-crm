@@ -34,7 +34,8 @@ def create_advisory_agent():
 - "Best fertilizer for tomatoes in Kano?" → Call get_crop_advice
 - "My yam leaves are yellowing, what should I do?" → Call get_crop_advice
 
-Keep responses simple, clear, and encouraging."""),
+Keep responses simple, clear, and encouraging.
+DO NOT use XML tags like <function=...> in your response. Just use the provided tools directly."""),
         MessagesPlaceholder(variable_name="messages"),
     ])
     
